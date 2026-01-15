@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchTrack - Aplicație Web</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .status {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.connected { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        .card p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        .card .meta {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            font-size: 0.9em;
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .stat-box .number {
+            font-size: 3em;
+            font-weight: bold;
+        }
+        .stat-box .label {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 WatchTrack</h1>
+            <p>Aplicație de urmărire filme și seriale</p>
+        </div>
+
+        <div id="status" class="status">Se conectează la API...</div>
+
+        <div class="section">
+            <h2>📊 Statistici</h2>
+            <div class="stats" id="stats">
+                <div class="stat-box">
+                    <div class="number" id="userCount">0</div>
+                    <div class="label">Utilizatori</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="movieCount">0</div>
+                    <div class="label">Filme</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="seriesCount">0</div>
+                    <div class="label">Seriale</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="reviewCount">0</div>
+                    <div class="label">Review-uri</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="seasonCount">0</div>
+                    <div class="label">Sezoane</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="episodeCount">0</div>
+                    <div class="label">Episoade</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👤 Utilizatori</h2>
+            <div id="users" class="loading">Se încarcă utilizatorii...</div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Filme</h2>
+            <div id="movies" class="loading">Se încarcă filmele...</div>
+        </div>
+
+        <div class="section">
+            <h2>📺 Seriale</h2>
+            <div id="series" class="loading">Se încarcă serialele...</div>
+        </div>
+
+        <div class="section">
+            <h2>⭐ Review-uri</h2>
+            <div id="reviews" class="loading">Se încarcă review-urile...</div>
+        </div>
+
+        <div class="section">
+            <h2>📅 Sezoane</h2>
+            <div id="seasons" class="loading">Se încarcă sezoanele...</div>
+        </div>
+
+        <div class="section">
+            <h2>🎞️ Episoade</h2>
+            <div id="episodes" class="loading">Se încarcă episoadele...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return null;
+            }
+        }
+
+        async function loadUsers() {
+            const users = await fetchData('/users');
+            const container = document.getElementById('users');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="empty">Nu există utilizatori încă</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="grid">' + users.map(user => `
+                <div class="card">
+                    <h3>👤 ${user.username}</h3>
+                    <p>📧 ${user.email}</p>
+                    <div class="meta">
+                        <p>📅 Creat: ${new Date(user.createdAt).toLocaleDateString('ro-RO')}</p>
+                        <p>🆔 ID: ${user.id}</p>
+                    </div>
+                </div>
+            `).join('') + '</div>';
+            
+            document.getElementById('userCount').textContent = users.length;
+        }
+
+        async function loadMovies() {
+            const movies = await fetchData('/movies');
+            const container = document.getElementById('movies');
+            
+            if (!movies || movies.length === 0) {
+                container.innerHTML = '<div class="empty">Nu există filme încă</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="grid">' + movies.map(movie => `
+                <div class="card">
+                    <h3>🎬 ${movie.title}</h3>
+                    ${movie.description ? `<p>${movie.description}</p>` : ''}
+                    <div class="meta">
+                        <p>📅 An: ${movie.releaseYear || 'N/A'}</p>
+                        <p>🎭 Gen: ${movie.genre || 'N/A'}</p>
+                        <p>⏱️ Durată: ${movie.durationMinutes || 'N/A'} min</p>
+                    </div>
+                </div>
+            `).join('') + '</div>';
+            
+            document.getElementById('movieCount').textContent = movies.length;
+        }
+
+        async function loadSeries() {
+            const series = await fetchData('/series');
+            const container = document.getElementById('series');
+            
+            if (!series || series.length === 0) {
+                container.innerHTML = '<div class="empty">Nu există seriale încă</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="grid">' + series.map(s => `
+                <div class="card">
+                    <h3>📺 ${s.title}</h3>
+                    ${s.description ? `<p>${s.description}</p>` : ''}
+                    <div class="meta">
+                        <p>📅 An: ${s.releaseYear || 'N/A'}</p>
+                        <p>🎭 Gen: ${s.genre || 'N/A'}</p>
+                    </div>
+                </div>
+            `).join('') + '</div>';
+            
+            document.getElementById('seriesCount').textContent = series.length;
+        }
+
+        async function loadReviews() {
+            const reviews = await fetchData('/reviews');
+            const container = document.getElementById('reviews');
+            
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = '<div class="empty">Nu există review-uri încă</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="grid">' + reviews.map(review => `
+                <div class="card">
+                    <h3>⭐ Rating: ${review.rating}/10</h3>
+                    ${review.comment ? `<p>"${review.comment}"</p>` : ''}
+                    <div class="meta">
+                        <p>👤 User ID: ${review.userId}</p>
+                        <p>📅 ${new Date(review.createdAt).toLocaleDateString('ro-RO')}</p>
+                    </div>
+                </div>
+            `).join('') + '</div>';
+            
+            document.getElementById('reviewCount').textContent = reviews.length;
+        }
+
+        async function loadSeasons() {
+            const seasons = await fetchData('/seasons');
+            const container = document.getElementById('seasons');
+            
+            if (!seasons || seasons.length === 0) {
+                container.innerHTML = '<div class="empty">Nu există sezoane încă</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="grid">' + seasons.map(season => `
+                <div class="card">
+                    <h3>📅 Sezonul ${season.seasonNumber}</h3>
+                    ${season.title ? `<p>${season.title}</p>` : ''}
+                    <div class="meta">
+                        <p>📺 Series ID: ${season.seriesId}</p>
+                        <p>📅 An: ${season.releaseYear || 'N/A'}</p>
+                        <p>🆔 Season ID: ${season.id}</p>
+                    </div>
+                </div>
+            `).join('') + '</div>';
+            
+            document.getElementById('seasonCount').textContent = seasons.length;
+        }
+
+        async function loadEpisodes() {
+            const episodes = await fetchData('/episodes');
+            const container = document.getElementById('episodes');
+            
+            if (!episodes || episodes.length === 0) {
+                container.innerHTML = '<div class="empty">Nu există episoade încă</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="grid">' + episodes.map(episode => `
+                <div class="card">
+                    <h3>🎞️ E${episode.episodeNumber}: ${episode.title}</h3>
+                    ${episode.description ? `<p>${episode.description}</p>` : ''}
+                    <div class="meta">
+                        <p>📅 Season ID: ${episode.seasonId}</p>
+                        <p>⏱️ Durată: ${episode.durationMinutes || 'N/A'} min</p>
+                        ${episode.airDate ? `<p>📅 ${new Date(episode.airDate).toLocaleDateString('ro-RO')}</p>` : ''}
+                    </div>
+                </div>
+            `).join('') + '</div>';
+            
+            document.getElementById('episodeCount').textContent = episodes.length;
+        }
+
+        async function init() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                // Test connection
+                const testResponse = await fetch(`${API_URL}/users`);
+                if (testResponse.ok) {
+                    statusDiv.className = 'status connected';
+                    statusDiv.textContent = '✅ Conectat la API WatchTrack!';
+                    
+                    // Load all data
+                    await Promise.all([
+                        loadUsers(),
+                        loadMovies(),
+                        loadSeries(),
+                        loadReviews(),
+                        loadSeasons(),
+                        loadEpisodes()
+                    ]);
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Nu se poate conecta la API. Verifică dacă Docker rulează!';
+                console.error('Connection error:', error);
+            }
+        }
+
+        // Load data on page load
+        window.onload = init;
+    </script>
+</body>
+</html>

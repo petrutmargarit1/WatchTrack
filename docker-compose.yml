@@ -1,0 +1,43 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: watchtrack-db
+    environment:
+      POSTGRES_DB: watchtrack
+      POSTGRES_USER: watchtrack_user
+      POSTGRES_PASSWORD: watchtrack_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U watchtrack_user -d watchtrack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - watchtrack-network
+
+  # WatchTrack API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watchtrack-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - watchtrack-network
+
+volumes:
+  postgres_data:
+
+networks:
+  watchtrack-network:
+    driver: bridge
