@@ -1342,7 +1342,7 @@ Client          Controller        Service          DbContext        Database
 ---
 
 **Document Control:**
-- **Autor:** Alex (cu asistență Warp AI)
+- **Autor:** Sofron Alexandru, Necula Valentin, Margarit Petrut
 - **Revizie:** 1.0
 - **Data:** 15 Ianuarie 2026
 - **Status:** Final
